@@ -9,4 +9,5 @@ urlpatterns = [
 
     # Rota para /filmes/<id>/ (Ver, Atualizar, Deletar)
     path('<int:pk>/', views.FilmeDetalheView.as_view(), name='filme-detalhe'),
+    path('login/', views.LoginView.as_view(), name='login'),
 ]
