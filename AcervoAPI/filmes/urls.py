@@ -1,13 +1,13 @@
 from django.urls import path
-from . import views
+from .views import FilmeListaView, FilmeDetalheView, LoginView
 
 app_name = 'filmes' # Define um namespace para as URLs
 
 urlpatterns = [
     # Rota para /filmes/ (Listar e Criar)
-    path('', views.FilmeListaView.as_view(), name='filme-lista'),
+    path('', FilmeListaView.as_view(), name='filme-lista'),
 
     # Rota para /filmes/<id>/ (Ver, Atualizar, Deletar)
-    path('<int:pk>/', views.FilmeDetalheView.as_view(), name='filme-detalhe'),
-    path('login/', views.LoginView.as_view(), name='login'),
+    path('<int:pk>/', FilmeDetalheView.as_view(), name='filme-detalhe'),
+    path('login/', LoginView.as_view(), name='login'),
 ]

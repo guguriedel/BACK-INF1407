@@ -1,12 +1,14 @@
-from django.shortcuts import render
-
-# Create your views here.
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated # Para proteger o endpoint
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.authentication import TokenAuthentication
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
+from drf_yasg.utils import swagger_auto_schema
+from django.shortcuts import get_object_or_404
+
+
 
 from .models import Filme
 from .serializers import FilmeSerializer
@@ -14,8 +16,10 @@ from .serializers import FilmeSerializer
 class FilmeListaView(APIView):
     """
     Endpoint para listar (GET) e criar (POST) filmes.
+    Cada User só enxerga os proprios filmes
     """
-    # Exige que o usuário esteja autenticado para acessar 
+    # Exige que o usuário esteja autenticado para acessar
+    authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -23,66 +27,76 @@ class FilmeListaView(APIView):
         Retorna a lista de filmes APENAS do usuário logado.
         Isso atende ao requisito de "visões diferentes por usuário"[cite: 1913, 1919].
         """
-        filmes = Filme.objects.filter(usuario=request.user)
+        filmes = Filme.objects.filter(usuario=request.user).order_by("-data_visto", "-id")
         serializer = FilmeSerializer(filmes, many=True)
-        return Response(serializer.data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
+    @swagger_auto_schema(request_body=FilmeSerializer)
     def post(self, request):
         """
         Cria um novo filme para o usuário logado.
         """
-        serializer = FilmeSerializer(data=request.data)
+        data = request.data.copy()
+        data["usuario"] = request.user.id
+
+        serializer = FilmeSerializer(data=data)
         if serializer.is_valid():
-            # Salva o filme associando ao usuário logado (request.user)
-            serializer.save(usuario=request.user)
+            serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
 
 
 class FilmeDetalheView(APIView):
     """
     Endpoint para ver (GET), atualizar (PUT) e deletar (DELETE) um filme específico.
     """
+    authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
 
-    def get_object(self, pk, usuario):
+    @swagger_auto_schema(request_body=FilmeSerializer)
+    def get_object(self, usuario, pk):
         """
         Helper para buscar um filme (pk) que pertença ao usuário (usuario).
         """
-        try:
-            return Filme.objects.get(pk=pk, usuario=usuario)
-        except Filme.DoesNotExist:
-            return None
+        return get_object_or_404(Filme, pk=pk, usuario=usuario)
 
     def get(self, request, pk):
         """
         Retorna os detalhes de um filme, se ele pertencer ao usuário.
         """
-        filme = self.get_object(pk, request.user)
+        filme = self.get_object(request.user, pk)
+
         if filme is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
         serializer = FilmeSerializer(filme)
-        return Response(serializer.data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
+    @swagger_auto_schema(request_body=FilmeSerializer)
     def put(self, request, pk):
         """
         Atualiza um filme, se ele pertencer ao usuário.
         """
-        filme = self.get_object(pk, request.user)
+        filme = self.get_object(request.user, pk)
+        data = request.data.copy()
+        data['usuario'] = request.user.id
         if filme is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        serializer = FilmeSerializer(filme, data=request.data)
+        serializer = FilmeSerializer(filme, data=data)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data)
+            return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
 
     def delete(self, request, pk):
         """
         Deleta um filme, se ele pertencer ao usuário.
         """
-        filme = self.get_object(pk, request.user)
+        filme = self.get_object(request.user, pk)
         if filme is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -101,4 +115,4 @@ class LoginView(ObtainAuthToken):
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
         token, created = Token.objects.get_or_create(user=user)
-        return Response({'token': token.key})    
+        return Response({'token': token.key}, status=status.HTTP_200_OK)    
