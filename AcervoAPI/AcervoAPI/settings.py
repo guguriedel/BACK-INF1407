@@ -164,7 +164,22 @@ SWAGGER_SETTINGS = {
 # CORS (libera o front local)
 # -------------------------
 CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5000",
+    "http://127.0.0.1:5000",
     "http://localhost:8080",
     "http://127.0.0.1:8080",
     "http://0.0.0.0:8080",
+]
+
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
 ]
