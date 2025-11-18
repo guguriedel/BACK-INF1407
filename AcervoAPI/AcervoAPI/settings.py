@@ -117,7 +117,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'pt-br'
 
-TIME_ZONE = 'America/SaoPaulo'
+TIME_ZONE = 'America/Sao_Paulo'
 
 USE_I18N = True
 
@@ -169,6 +169,8 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:8080",
     "http://127.0.0.1:8080",
     "http://0.0.0.0:8080",
+    "http://[::1]:8080",
+    "http://[::]:8080",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
