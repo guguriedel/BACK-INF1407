@@ -3,8 +3,9 @@ from .views import (
     FilmeListaView, 
     FilmeDetalheView, 
     LoginView, 
-    RegisterView,  # <-- Importar
-    ChangePasswordView # <-- Importar
+    RegisterView,
+    ChangePasswordView,
+    PasswordResetView
 )
 
 app_name = 'filmes' 
@@ -15,7 +16,8 @@ urlpatterns = [
     path('<int:pk>/', FilmeDetalheView.as_view(), name='filme-detalhe'),
     
     # Rotas de Autenticação
-    path('register/', RegisterView.as_view(), name='register'), # <-- Adicionar
+    path('register/', RegisterView.as_view(), name='register'),
     path('login/', LoginView.as_view(), name='login'),
-    path('change-password/', ChangePasswordView.as_view(), name='change-password'), # <-- Adicionar
+    path('change-password/', ChangePasswordView.as_view(), name='change-password'),
+    path('password_reset/', PasswordResetView.as_view(), name='password-reset'),
 ]

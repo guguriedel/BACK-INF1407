@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'drf_yasg',
     'filmes',
     'rest_framework.authtoken',
+    'django_rest_passwordreset',
 ]
 
 MIDDLEWARE = [
@@ -185,3 +186,20 @@ CORS_ALLOW_HEADERS = [
     'x-csrftoken',
     'x-requested-with',
 ]
+
+# -------------------------
+# CONFIGURAÇÃO DE EMAIL
+# -------------------------
+# Para desenvolvimento, use console backend (mostra no console)
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# Para produção, configure com seu serviço de email (Gmail, SendGrid, etc.)
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = 'smtp.gmail.com'
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = 'seu_email@gmail.com'
+# EMAIL_HOST_PASSWORD = 'sua_senha_de_aplicativo'
+# DEFAULT_FROM_EMAIL = 'seu_email@gmail.com'
+
+# Para agora, apenas use um email padrão
+DEFAULT_FROM_EMAIL = 'noreply@acervofilmes.com'

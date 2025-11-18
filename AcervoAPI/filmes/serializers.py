@@ -1,6 +1,9 @@
 from rest_framework import serializers
 from .models import Filme
 from django.contrib.auth.models import User # <-- IMPORTAÇÃO NECESSÁRIA
+from django.core.mail import send_mail
+from django.conf import settings
+import secrets
 
 class FilmeSerializer(serializers.ModelSerializer):
     class Meta:
@@ -50,3 +53,24 @@ class UserSerializer(serializers.ModelSerializer):
             last_name=validated_data.get('last_name', '')
         )
         return user
+
+
+# -----------------------------------------------------------------
+# SERIALIZER PARA RECUPERAÇÃO DE SENHA
+# -----------------------------------------------------------------
+class PasswordResetSerializer(serializers.Serializer):
+    """
+    Serializer para solicitar reset de senha.
+    O usuário envia apenas o email.
+    """
+    email = serializers.EmailField(required=True)
+
+    def validate_email(self, value):
+        """
+        Valida se o email existe no banco de dados.
+        """
+        try:
+            User.objects.get(email=value)
+        except User.DoesNotExist:
+            raise serializers.ValidationError("Esse email não está cadastrado.")
+        return value

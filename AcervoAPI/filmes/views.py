@@ -9,11 +9,14 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi 
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User 
+from django.core.mail import send_mail
+from django.conf import settings
+import secrets
 
 # Importa os models e serializers
 from .models import Filme
 # Agora o UserSerializer existe e pode ser importado
-from .serializers import FilmeSerializer, UserSerializer 
+from .serializers import FilmeSerializer, UserSerializer, PasswordResetSerializer 
 
 # -----------------------------------------------------------------
 # VIEW DE REGISTRO DE NOVO USUÁRIO (ESTAVA EM FALTA)
@@ -132,6 +135,71 @@ class ChangePasswordView(APIView):
         token = Token.objects.create(user=user)
         
         return Response({'token': token.key, 'message': 'Senha alterada com sucesso.'}, status=status.HTTP_200_OK)
+
+# -----------------------------------------------------------------
+# VIEW DE RECUPERAÇÃO DE SENHA
+# -----------------------------------------------------------------
+class PasswordResetView(APIView):
+    """
+    Endpoint para recuperação de senha.
+    O usuário envia seu email e recebe uma senha temporária.
+    """
+    permission_classes = [AllowAny]
+
+    @swagger_auto_schema(
+        operation_summary='Solicita reset de senha',
+        request_body=PasswordResetSerializer,
+        responses={
+            200: openapi.Response('Email com senha temporária enviado.', schema=openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={'message': openapi.Schema(type=openapi.TYPE_STRING)}
+            )),
+            400: 'Email não encontrado ou erro na validação.',
+        }
+    )
+    def post(self, request):
+        serializer = PasswordResetSerializer(data=request.data)
+        if serializer.is_valid():
+            email = serializer.validated_data['email']
+            user = User.objects.get(email=email)
+            
+            # Gera uma senha temporária
+            temp_password = secrets.token_urlsafe(12)
+            user.set_password(temp_password)
+            user.save()
+            
+            # Envia email com a senha temporária
+            subject = 'Sua Senha Temporária - Acervo de Filmes'
+            message = f"""
+Olá {user.first_name or user.username},
+
+Você solicitou uma recuperação de senha para sua conta.
+
+Sua senha temporária é: {temp_password}
+
+Por favor, faça login com essa senha e altere para uma senha de sua preferência.
+
+Obrigado!
+            """
+            try:
+                send_mail(
+                    subject,
+                    message,
+                    settings.DEFAULT_FROM_EMAIL,
+                    [email],
+                    fail_silently=False,
+                )
+                return Response(
+                    {'message': 'Email com a senha temporária foi enviado com sucesso.'},
+                    status=status.HTTP_200_OK
+                )
+            except Exception as e:
+                return Response(
+                    {'error': f'Erro ao enviar email: {str(e)}'},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 # -----------------------------------------------------------------
 # VIEWS DE FILMES (Corrigido para o Swagger)
