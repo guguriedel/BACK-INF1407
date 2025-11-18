@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import Filme
-from django.contrib.auth.models import User # <-- IMPORTAÇÃO NECESSÁRIA
+from django.contrib.auth.models import User
 from django.core.mail import send_mail
 from django.conf import settings
 import secrets
